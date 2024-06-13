@@ -1,0 +1,12 @@
+cmake_install.cmake
+Makefile
+CMakeFiles
+CMakeCache.txt
+*.pbf
+app/public/sdfglyph.*
+font-maker
+encoding.hpp
+output_dir/
+.bash_history
+*.so
+**/*.csv

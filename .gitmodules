@@ -1,0 +1,12 @@
+[submodule "vendor/sdf-glyph-foundry"]
+	path = vendor/sdf-glyph-foundry
+	url = https://github.com/mapbox/sdf-glyph-foundry.git
+[submodule "vendor/filesystem"]
+	path = vendor/filesystem
+	url = https://github.com/gulrak/filesystem.git
+[submodule "vendor/protozero"]
+	path = vendor/protozero
+	url = https://github.com/mapbox/protozero.git
+[submodule "vendor/pgf-encoding"]
+	path = vendor/pgf-encoding
+	url = https://github.com/wipfli/pgf-encoding.git

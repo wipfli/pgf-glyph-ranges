@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
         FontContainer f;
         init_font_container(f, name);
 
-        string font_path = "vendor/pgf-encoding/fonts/" + input_fonts[0].name + ".ttf";
+        string font_path = "vendor/pgf-encoding/fonts/" + input_fonts[input_font_index].name + ".ttf";
         load_face(f, font_path);
 
         string encoding_path = "vendor/pgf-encoding/encoding/" + name + ".csv";

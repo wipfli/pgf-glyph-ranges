@@ -22,13 +22,14 @@ Get the git submodules:
 git submodule update --init --recursive
 ```
 
-Configure the font and version you want to generate glyph ranges for in `local_config.hpp`:
+Configure the font and version you want to generate glyph ranges for at the beginning of `main.cpp`.
 
 ```cpp
-#include <string>
+vector<InputFont> input_fonts = {
+    {"NotoSansDevanagari-Regular", "1"}
+};
 
-std::string font_name = "NotoSansDevanagari-Regular";
-std::string version = "1";
+string output_name = "NotoSansDevanagari-Regular";
 ```
 
 Note that only font names and versions that are contained the `vendor/pgf-encoding` submodule are supported. This submodule points to [wipfli/pgf-encoding](https://github.com/wipfli/pgf-encoding).

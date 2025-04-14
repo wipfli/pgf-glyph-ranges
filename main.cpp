@@ -14,9 +14,28 @@
 #include <string>
 #include <map>
 
-#include "local_config.hpp"
-
 using namespace std;
+
+struct InputFont {
+    string name;
+    string version;
+};
+
+vector<InputFont> input_fonts = {
+    {"NotoSansBengali-Regular", "1.multiscript"},
+    {"NotoSansDevanagari-Regular", "1.multiscript"},
+    {"NotoSansGujarati-Regular", "1.multiscript"},
+    {"NotoSansGurmukhi-Regular", "1.multiscript"},
+    {"NotoSansKannada-Regular", "1.multiscript"},
+    {"NotoSansKhmer-Regular", "1.multiscript"},
+    {"NotoSansMalayalam-Regular", "1.multiscript"},
+    {"NotoSansMyanmar-Regular", "1.multiscript"},
+    {"NotoSansOriya-Regular", "1.multiscript"},
+    {"NotoSansTamil-Regular", "1.multiscript"},
+    {"NotoSansTelugu-Regular", "1.multiscript"}
+};
+
+string output_name = "NotoSansMultiscript-Regular-v1";
 
 struct PositionedGlyph {
     int index;
@@ -145,19 +164,20 @@ void do_codepoint(FontContainer& f, protozero::pbf_writer &inner_range, FT_ULong
 
 }
 
-string do_range(FontContainer& f, unsigned start, unsigned end, bool &has_content)
+string do_range(vector<FontContainer>& font_containers, unsigned start, unsigned end, bool &has_content)
 {
     string inner_range_data;
     {
         protozero::pbf_writer inner_range{inner_range_data};
-
-        inner_range.add_string(1, f.name);
+        inner_range.add_string(1, output_name);
         inner_range.add_string(2, to_string(start) + "-" + to_string(end));
 
         for (unsigned x = start; x <= end; x++)
         {
             FT_ULong char_code = x;
-            do_codepoint(f, inner_range, x, has_content);
+            for (int i = 0; i < font_containers.size(); ++i) {
+                do_codepoint(font_containers[i], inner_range, x, has_content);
+            }
         }
     }
 
@@ -217,9 +237,9 @@ void deinit_font_container(FontContainer& f)
     FT_Done_FreeType(f.library);
 }
 
-GlyphBuffer generate_glyph_buffer(FontContainer& f, uint32_t start_codepoint, bool &has_content)
+GlyphBuffer generate_glyph_buffer(vector<FontContainer>& font_containers, uint32_t start_codepoint, bool &has_content)
 {
-    string result = do_range(f, start_codepoint, start_codepoint + 255, has_content);
+    string result = do_range(font_containers, start_codepoint, start_codepoint + 255, has_content);
 
     GlyphBuffer g;
     char *result_ptr = (char *)malloc(result.size());
@@ -231,8 +251,7 @@ GlyphBuffer generate_glyph_buffer(FontContainer& f, uint32_t start_codepoint, bo
 
 int main(int argc, char *argv[])
 {
-    string name = font_name + "-v" + version;
-    string output_dir = "font/" + name;
+    string output_dir = "font/" + output_name;
 
     if (ghc::filesystem::exists(output_dir)) {
         ghc::filesystem::remove_all(output_dir);
@@ -240,19 +259,28 @@ int main(int argc, char *argv[])
 
     ghc::filesystem::create_directory(output_dir);
 
-    FontContainer f;
-    init_font_container(f, name);
 
-    string font_path = "vendor/pgf-encoding/fonts/" + font_name + ".ttf";
-    load_face(f, font_path);
+    vector<FontContainer> font_containers = {};
 
-    string encoding_path = "vendor/pgf-encoding/encoding/" + name + ".csv";
-    load_encoding(encoding_path, f);
+    for (int input_font_index = 0; input_font_index < input_fonts.size(); ++input_font_index) {
+        string name = input_fonts[input_font_index].name + "-v" + input_fonts[input_font_index].version;
 
+        FontContainer f;
+        init_font_container(f, name);
+
+        string font_path = "vendor/pgf-encoding/fonts/" + input_fonts[0].name + ".ttf";
+        load_face(f, font_path);
+
+        string encoding_path = "vendor/pgf-encoding/encoding/" + name + ".csv";
+        load_encoding(encoding_path, f);
+
+        font_containers.push_back(f);
+    }
+    
     for (int i = 0; i < 65536; i += 256)
     {
         bool has_content = false;
-        GlyphBuffer g = generate_glyph_buffer(f, i, has_content);
+        GlyphBuffer g = generate_glyph_buffer(font_containers, i, has_content);
  
         if (has_content) {
             ofstream output;
@@ -265,7 +293,9 @@ int main(int argc, char *argv[])
         free(g.data);
     }
 
-    deinit_font_container(f);
+    for (int input_font_index = 0; input_font_index < input_fonts.size(); ++input_font_index) {
+        deinit_font_container(font_containers[input_font_index]);
+    }
 
     return 0;
 }
